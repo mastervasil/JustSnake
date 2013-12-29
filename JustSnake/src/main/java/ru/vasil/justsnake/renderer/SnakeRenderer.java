@@ -300,6 +300,9 @@ public class SnakeRenderer implements GLSurfaceView.Renderer {
     public void onDrawFrame(GL10 glUnused)
     {
         GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
+        GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+        GLES20.glDepthFunc(GLES20.GL_LEQUAL);
+        GLES20.glDepthMask(true);
 
         // Do a complete rotation every 10 seconds.
         long time = SystemClock.uptimeMillis() % 10000L;
@@ -308,6 +311,7 @@ public class SnakeRenderer implements GLSurfaceView.Renderer {
         // Draw the triangle facing straight on.
         Matrix.setIdentityM(mModelMatrix, 0);
         Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 0.0f, 0.0f, 1.0f);
+        Matrix.translateM(mModelMatrix, 0, angleInDegrees / 360, 0, 0);
         drawTriangle(mTriangle1Vertices);
 
         // Draw one translated a bit down and rotated to be flat on the ground.

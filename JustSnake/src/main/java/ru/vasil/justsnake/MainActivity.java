@@ -1,26 +1,16 @@
 package ru.vasil.justsnake;
 
 import android.app.Activity;
-import android.app.ActivityManager;
-import android.content.Context;
-import android.content.pm.ConfigurationInfo;
 import android.opengl.GLSurfaceView;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.ActionBar;
-import android.support.v4.app.Fragment;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.os.Build;
-import ru.vasil.justsnake.renderer.SnakeRenderer;
-
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
+import ru.vasil.justsnake.renderer.NativeRendererWrapper;
 
 public class MainActivity extends Activity {
+    static {
+        System.loadLibrary("justsnake");
+    }
 
     private GLSurfaceView glView;
 
@@ -30,7 +20,7 @@ public class MainActivity extends Activity {
         glView = new GLSurfaceView(this);
         glView.setEGLContextClientVersion(2);
 
-        glView.setRenderer(new SnakeRenderer());
+        glView.setRenderer(new NativeRendererWrapper());
         setContentView(glView);
     }
 
