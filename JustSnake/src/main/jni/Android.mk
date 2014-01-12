@@ -6,7 +6,8 @@ LOCAL_MODULE     := justsnake
 LOCAL_SRC_FILES += Wrappers.cpp
 LOCAL_ARM_MODE := arm
 COMMON_CFLAGS := -Werror -DANDROID -DDISABLE_IMPORTGL \
--isystem $(SYSROOT)/usr/include/
+-isystem $(SYSROOT)/usr/include/ \
+-I/Users/vasil/projects/lib/glm/
 ifeq ($(TARGET_ARCH),x86)
   LOCAL_CFLAGS   := $(COMMON_CFLAGS)
 else
