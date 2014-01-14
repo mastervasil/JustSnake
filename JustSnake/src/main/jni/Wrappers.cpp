@@ -1,3 +1,5 @@
+#define GLM_FORCE_RADIANS
+
 #include <stdlib.h>
 #include <jni.h>
 #include <android/log.h>
@@ -225,6 +227,15 @@ NativeRenderer(onSurfaceChanged)(
     LOGI("onSurfaceChanged, %d, %d", width, height);
 }
 
+bool output = true;
+
+const float mvp[] = {
+    0.4549124240875244,0.3745418190956116,0.0,0.0,
+    -0.18375958502292633,0.9272100329399109,0.0,0.0,
+    0.0,0.0,-1.2222222089767456,-1.0,
+    0.02779514528810978,0.02288450300693512,-0.3888890743255615,1.5
+};
+
 extern "C" JNIEXPORT void JNICALL
 NativeRenderer(onDrawFrame)(
                             JNIEnv* env, jclass clazz)
@@ -238,6 +249,7 @@ NativeRenderer(onDrawFrame)(
     // clearColor();
     // glClear(GL_COLOR_BUFFER_BIT);
 
+    // LOGI("Draw");
 
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
@@ -248,8 +260,30 @@ NativeRenderer(onDrawFrame)(
 
     glVertexAttribPointer(colorHandle, 4, GL_FLOAT, GL_FALSE, 0, triangleColor);
     glEnableVertexAttribArray(colorHandle);
+    glm::mat4 m(0.4549124240875244,0.3745418190956116,0.0,0.0,
+    -0.18375958502292633,0.9272100329399109,0.0,0.0,
+    0.0,0.0,-1.2222222089767456,-1.0,
+    0.02779514528810978,0.02288450300693512,-0.3888890743255615,1.5);
 
-    glUniformMatrix4fv(mvpMatrixHandle, 1, GL_FALSE, glm::value_ptr(getMVP()));    
+    glUniformMatrix4fv(mvpMatrixHandle, 1, GL_FALSE, glm::value_ptr(m));    
+
+    if (output) {
+        glm::mat4 m = getMVP();
+        char buf[1024];
+        int cx = 0;
+        for (int i = 0; i < m.length(); i++) {
+            glm::vec4 v = m[i];
+            for (int k = 0; k < v.length(); k++) {
+                cx += snprintf(buf + cx, 1024 - cx, "%f", v[k]);
+                cx += snprintf(buf + cx, 1024 - cx, ", ");
+            }
+            cx -= 2;
+            cx += snprintf(buf + cx, 1024 - cx, ";");
+        }
+        // LOGI("%s", buf);
+        output = false;
+    }
+    
     
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
