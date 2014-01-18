@@ -41,57 +41,46 @@ static const char fragmentShader[] = {
     "}                              \n"
 };
 
+const float CENTER_SHIFT = 0.288675134594813;
+const float CENTER_HEIGHT = 0.816496580927726 / 3;
 const GLfloat triangleVertices[] = {
     // X, Y, Z,
-    // R, G, B, A
-    -0.5f, -0.25f, 0.0f,
-    
-    
-    0.5f, -0.25f, 0.0f,
-    
-    
-    0.0f, 0.559016994f, 0.0f
+    -0.5f, -CENTER_SHIFT, -CENTER_HEIGHT,
+    0.5f, -CENTER_SHIFT, -CENTER_HEIGHT,
+    0.0f, CENTER_SHIFT * 2, -CENTER_HEIGHT,
+    0.0f, 0.0f, CENTER_HEIGHT * 2,
+    -0.5f, -CENTER_SHIFT, -CENTER_HEIGHT,
+    0.5f, -CENTER_SHIFT, -CENTER_HEIGHT,
     };
 
 const GLfloat triangleColor[] = {
+     // R, G, B, A
   1.0f, 0.0f, 0.0f, 1.0f,
   0.0f, 0.0f, 1.0f, 1.0f,
-  0.0f, 1.0f, 0.0f, 1.0f
+  0.0f, 1.0f, 0.0f, 1.0f,
+  0.4f, 0.5f, 0.6f, 1.0f,
+  1.0f, 0.0f, 0.0f, 1.0f,
+  0.0f, 0.0f, 1.0f, 1.0f,
 };
 
 GLint mvpMatrixHandle;
 GLint positionHandle;
 GLint colorHandle;
 
-static glm::mat4 getMVP() {
-    const float eyeX = 0.0f;
-    const float eyeY = 0.0f;
-    const float eyeZ = 1.5f;
-    
-    // // We are looking toward the distance
-    // const float lookX = 0.0f;
-    // const float lookY = 0.0f;
-    // const float lookZ = -5.0f;
-    
-    // // Set our up vector. This is where our head would be pointing were we holding the camera.
-    // const float upX = 0.0f;
-    // const float upY = 1.0f;
-    // const float upZ = 0.0f;
+static glm::mat4 getMVP(float deg, float shift) {
     glm::mat4 projection =
-    glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.f);
-    glm::mat4 ViewTranslate = glm::translate(
-                                             glm::mat4(1.0f),
-                                             glm::vec3(eyeX, eyeY, eyeZ));
-    glm::mat4 ViewRotateX = glm::rotate(
-                                        ViewTranslate,
-                                        0.1f, glm::vec3(-1.0f, 0.0f, 0.0f));
-    glm::mat4 View = glm::rotate(
-                                 ViewRotateX,
-                                 0.2f, glm::vec3(0.0f, 1.0f, 0.0f));
-    glm::mat4 Model = glm::scale(
-                                 glm::mat4(1.0f),
-                                 glm::vec3(0.5f));
-    glm::mat4 mvp = projection * View * Model;
+    glm::perspective(12.0f, 1.0f, 0.1f, 100.f);
+    const float radius = 5.0f;
+    float rad = glm::radians(deg);
+    float x = radius * sin(rad);
+    float y = radius * cos(rad);
+    glm::mat4 view       = glm::lookAt(
+    glm::vec3(x, y, 2), // Camera is at (4,3,3), in World Space
+    glm::vec3(0,0,0), // and looks at the origin
+    glm::vec3(0,0,-1)  // Head is up (set to 0,-1,0 to look upside-down)
+);
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 mvp = projection * view * model;
     return mvp;
 }
 
@@ -229,28 +218,10 @@ NativeRenderer(onSurfaceChanged)(
 
 bool output = true;
 
-const float mvp[] = {
-    0.4549124240875244,0.3745418190956116,0.0,0.0,
-    -0.18375958502292633,0.9272100329399109,0.0,0.0,
-    0.0,0.0,-1.2222222089767456,-1.0,
-    0.02779514528810978,0.02288450300693512,-0.3888890743255615,1.5
-};
-
 extern "C" JNIEXPORT void JNICALL
 NativeRenderer(onDrawFrame)(
-                            JNIEnv* env, jclass clazz)
+                            JNIEnv* env, jclass clazz, float f)
 {
-    // LOGI("NEW VALUE: %f", color[0]);
-    // if (color[0] < 1.0f) {
-    //     color[0] += 0.01f;
-    // } else {
-    //     color[0] = 0.0f;
-    // }
-    // clearColor();
-    // glClear(GL_COLOR_BUFFER_BIT);
-
-    // LOGI("Draw");
-
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);
@@ -260,30 +231,8 @@ NativeRenderer(onDrawFrame)(
 
     glVertexAttribPointer(colorHandle, 4, GL_FLOAT, GL_FALSE, 0, triangleColor);
     glEnableVertexAttribArray(colorHandle);
-    glm::mat4 m(0.4549124240875244,0.3745418190956116,0.0,0.0,
-    -0.18375958502292633,0.9272100329399109,0.0,0.0,
-    0.0,0.0,-1.2222222089767456,-1.0,
-    0.02779514528810978,0.02288450300693512,-0.3888890743255615,1.5);
 
-    glUniformMatrix4fv(mvpMatrixHandle, 1, GL_FALSE, glm::value_ptr(m));    
-
-    if (output) {
-        glm::mat4 m = getMVP();
-        char buf[1024];
-        int cx = 0;
-        for (int i = 0; i < m.length(); i++) {
-            glm::vec4 v = m[i];
-            for (int k = 0; k < v.length(); k++) {
-                cx += snprintf(buf + cx, 1024 - cx, "%f", v[k]);
-                cx += snprintf(buf + cx, 1024 - cx, ", ");
-            }
-            cx -= 2;
-            cx += snprintf(buf + cx, 1024 - cx, ";");
-        }
-        // LOGI("%s", buf);
-        output = false;
-    }
+    glUniformMatrix4fv(mvpMatrixHandle, 1, GL_FALSE, glm::value_ptr(getMVP(f, 0.0f)));    
     
-    
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 6);
 }

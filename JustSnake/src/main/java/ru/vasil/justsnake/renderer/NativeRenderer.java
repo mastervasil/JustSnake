@@ -8,5 +8,5 @@ public class NativeRenderer {
 
     native static public void onSurfaceChanged(int width, int height);
 
-    native static public void onDrawFrame();
+    native static public void onDrawFrame(float f);
 }

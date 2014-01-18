@@ -7,8 +7,11 @@ import android.content.pm.ConfigurationInfo;
 import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 import android.widget.Toast;
 import ru.vasil.justsnake.renderer.NativeRendererWrapper;
 
@@ -16,6 +19,8 @@ public class MainActivity extends Activity {
     static {
         System.loadLibrary("justsnake");
     }
+
+    private Handler handler;
 
     private GLSurfaceView glView;
 
@@ -30,8 +35,12 @@ public class MainActivity extends Activity {
         final boolean supportsEs2 = (configurationInfo != null && configurationInfo.reqGlEsVersion >= 0x20000)
                 || isProbablyEmulator();
 
+        setContentView(R.layout.activity_main);
+        final TextView textView = (TextView) findViewById(R.id.info);
+        textView.setText("Test");
         if (supportsEs2) {
-            glView = new GLSurfaceView(this);
+//            glView = new GLSurfaceView(this);
+            glView = (GLSurfaceView) findViewById(R.id.glView);
 
             if (isProbablyEmulator()) {
                 // Avoids crashes on startup with some emulator images.
@@ -39,8 +48,17 @@ public class MainActivity extends Activity {
             }
 
             glView.setEGLContextClientVersion(2);
-            glView.setRenderer(new NativeRendererWrapper());
-            setContentView(glView);
+            NativeRendererWrapper renderer = new NativeRendererWrapper();
+            glView.setRenderer(renderer);
+//            setContentView(glView);
+
+            handler = new Handler() {
+                @Override
+                public void handleMessage(Message msg) {
+                    textView.setText("" + msg.obj);
+                }
+            };
+            renderer.setHandler(handler);
         } else {
             // Should never be seen in production, since the manifest filters
             // unsupported devices.
